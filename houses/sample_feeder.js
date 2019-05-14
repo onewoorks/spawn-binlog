@@ -3,6 +3,7 @@ const MySQLEvents = require('@rodrigogs/mysql-events');
 const logger = require('../templates/logger')
 var dotenv = require('dotenv')
 var passData = require('../templates/passing_data')
+var res_event = require('../event/etl_log')
 
 dotenv.config()
 
@@ -22,9 +23,8 @@ const program = async () => {
         password: 'Root@!234',
     });
 
-    
-
     const instance = new MySQLEvents(connection, {
+        server_id: 1,
         startAtEnd: true,
         excludedSchemas: {
             mysql: true,
@@ -37,10 +37,14 @@ const program = async () => {
         name: 'etl_log',
         expression: 'sample_feeder.etl_log',
         statement: MySQLEvents.STATEMENTS.ALL,
-        onEvent: (event) => { 
-            let newData = JSON.parse(event.affectedRows[0].after.etl_data)
-            passData.send_to_gateway(event, newData.TableETL)
-            
+        onEvent: (event) => {
+            res_event.watch_column_current(event, 'etl_status', 'SUCCESS', result => {
+                if(result){
+                    passData.send_to_gateway(event, newData.TableETL)
+                } else {
+                    logger.response_message('etl_status out of scoped..')
+                }
+            })
         },
     });
 

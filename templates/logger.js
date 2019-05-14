@@ -11,5 +11,10 @@ module.exports = {
         console.log('ORDER SENT TO WORKER >> ')
         console.log(data)
         console.log('\r')
-    }
+    },
+    response_message: (data) => {
+        console.log('INFO : ')
+        console.log(data),
+        console.log('\r\n')
+    } 
 }  
