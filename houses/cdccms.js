@@ -8,7 +8,7 @@ dotenv.config()
 
 logger.initmessage({
     network: 'localhost',
-    house: 'sample_feeder',
+    house: 'cdccms',
     room: [
         'version',
         'etl_log'
