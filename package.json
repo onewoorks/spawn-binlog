@@ -1,0 +1,18 @@
+{
+  "name": "mysql-binlog",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "irwan ibrahim (onewoorks)",
+  "license": "ISC",
+  "dependencies": {
+    "@rodrigogs/mysql-events": "^0.5.3",
+    "dotenv": "^8.0.0",
+    "mysql": "^2.17.1",
+    "mysql-events": "0.0.11",
+    "request": "^2.88.0"
+  }
+}
