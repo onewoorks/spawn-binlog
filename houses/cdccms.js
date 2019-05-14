@@ -37,7 +37,7 @@ const program = async () => {
         name: 'etl_log',
         expression: 'cdccms.etl_log',
         statement: MySQLEvents.STATEMENTS.ALL,
-        onEvent: (event) => { 
+        onEvent: (event) => {
             res_event.watch_column_current(event, 'etl_status', 'SUCCESS', result => {
                 if(result){
                     let newData = JSON.parse(event.affectedRows[0].after.etl_data)
