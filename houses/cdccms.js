@@ -1,50 +1,51 @@
+const mysql = require('mysql');
+const MySQLEvents = require('@rodrigogs/mysql-events');
+const logger = require('../templates/logger')
 var dotenv = require('dotenv')
-var request = require('request')
+var passData = require('../templates/passing_data')
 
 dotenv.config()
 
-var MySQLEvents = require('mysql-events');
-// var dsn = {
-//     host: process.env.DB_HOST,
-//     user: process.env.DB_USER,
-//     password: process.env.DB_PASS
-// }
+logger.initmessage({
+    network: 'localhost',
+    house: 'sample_feeder',
+    room: [
+        'version',
+        'etl_log'
+    ]
+})
 
-var dsn = {
-    host: 'localhost',
-    user: 'iwang',
-    password: 'Root@!234'
-}
+const program = async () => {
+    const connection = mysql.createConnection({
+        host: process.env.DB_HOST,
+        user: process.env.DB_USER,
+        password: process.env.DB_PASS,
+    });
 
-var myCon = MySQLEvents(dsn);
-console.log('\tNetwork : localhost')
-console.log('\t\tHouse : cdccms')
-console.log('\t\t\tRoom : etl_log')
+    const instance = new MySQLEvents(connection, {
+        startAtEnd: true,
+        excludedSchemas: {
+            mysql: true,
+        },
+    });
 
-var table_version = myCon.add(
-    'ep_cdc.version',
-     async function (oldRow, newRow, res) {
-        //new row inserted 
-        if (oldRow === null && newRow !== null) {
-            console.log('new row detected')
-        }
+    await instance.start();
 
-        //row updated
-        if (oldRow !== null && newRow !== null) {
-            let data = {
-                title: "data update detected!",
-                table: `${newRow.database}.${newRow.table}`,
-                column: newRow.changedColumns,
-                old_data: oldRow.fields,
-                new_data: newRow.fields
-            }
-            console.log('we send some info to our gateway')
-            request.post(`${process.env.REST_GATEWAY}ghost/fulfilment`, data)
-        }
- 
-        //row deleted
-        if (oldRow !== null && newRow === null) {
-            console.log('row deleted')
-        } 
-    }
-);
+    instance.addTrigger({
+        name: 'etl_log',
+        expression: 'cdccms.etl_log',
+        statement: MySQLEvents.STATEMENTS.ALL,
+        onEvent: (event) => { 
+            let newData = JSON.parse(event.affectedRows[0].after.etl_data)
+            passData.send_to_gateway(event, newData.TableETL)
+            
+        },
+    });
+
+    instance.on(MySQLEvents.EVENTS.CONNECTION_ERROR, console.error);
+    instance.on(MySQLEvents.EVENTS.ZONGJI_ERROR, console.error);
+};
+
+program()
+    .then(() => console.log('Waiting for database events...'))
+    .catch(console.error);
