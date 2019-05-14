@@ -3,6 +3,7 @@ const MySQLEvents = require('@rodrigogs/mysql-events');
 const logger = require('../templates/logger')
 var dotenv = require('dotenv')
 var passData = require('../templates/passing_data')
+var res_event = require('../event/etl_log')
 
 dotenv.config()
 
